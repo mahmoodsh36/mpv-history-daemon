@@ -160,6 +160,7 @@ class SocketData:
             os.path.join(self.data_dir, f"{self.socket_time}.json"), "w"
         ) as event_f:
             event_f.write(serialized)
+        # logger.debug(f"{self.socket_time}|{time()}|{serialized}|written") # redundant
 
     def nevent(self, event_name: str, event_data: Optional[Any] = None) -> None:
         """add an event"""
@@ -175,7 +176,7 @@ class SocketData:
         # self.nevent("playlist", clean_playlist(self.socket.playlist))
 
     def poll_for_property(
-        self, attr: str, event_name: str, tries: int = 20, create_event: bool = True
+        self, attr: str, event_name: str, tries: int = 10, create_event: bool = True
     ) -> Any:
         """
         Some properties aren't set when the file starts?
@@ -194,7 +195,7 @@ class SocketData:
                 if create_event:
                     self.nevent(event_name, value)
                 return value
-            sleep(0.1)
+            sleep(1)
         else:
             logger.warning(f"{self.socket_loc} Couldn't poll for {event_name}")
 
@@ -421,10 +422,10 @@ class LoopHandler:
         now = time()
         for socket_data in self.socket_data.values():
             if now > socket_data.write_at:
-                logger.debug(f"{socket_data.socket_time}|running periodic write")
+                # logger.debug(f"{socket_data.socket_time}|running periodic write")
                 socket_data.write()
                 socket_data.write_at = now + socket_data.write_period
-                self.debug_internals()
+                # self.debug_internals()
 
     def write_data(self, force: bool = False) -> None:
         """
@@ -509,7 +510,7 @@ def run(
     assert os.path.isdir(socket_dir)
     os.makedirs(data_dir, exist_ok=True)
     assert os.path.isdir(data_dir)
-    logfile(log_file, maxBytes=int(1e7), backupCount=1)
+    logfile(log_file, maxBytes=int(1e8), backupCount=1000000)
     lh = LoopHandler(
         socket_dir,
         data_dir,

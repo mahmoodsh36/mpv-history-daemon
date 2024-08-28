@@ -14,7 +14,7 @@ try:
         pth = CPath(file) if not isinstance(file, CPath) else file  # type: ignore[no-untyped-call]
 
         with pth.open() as f:  # type: ignore[no-untyped-call]
-            return orjson.loads(f.read())  # type: ignore[no-untyped-call]
+            return orjson.loads(f.read(), indent=2)  # type: ignore[no-untyped-call]
 
     def dump_json(data: Any) -> str:
         bdata: bytes = orjson.dumps(data, option=orjson.OPT_NON_STR_KEYS)
@@ -31,4 +31,4 @@ except ImportError:
             return json.load(f)
 
     def dump_json(data: Any) -> str:
-        return json.dumps(data)
+        return json.dumps(data, indent=2)
