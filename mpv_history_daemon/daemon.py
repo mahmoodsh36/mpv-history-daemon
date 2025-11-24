@@ -117,9 +117,9 @@ class SocketData:
         # keep track of playlist/playlist-count, so we can use eof to determine
         # whether we should read next metadata
         pcount = self.socket.playlist_count
-        assert isinstance(
-            pcount, int
-        ), f"Playlist count is not an integer {self.socket_loc} {self.socket.playlist_count}"
+        assert isinstance(pcount, int), (
+            f"Playlist count is not an integer {self.socket_loc} {self.socket.playlist_count}"
+        )
         self.playlist_count: int = pcount
         playlist_pos = self.socket.playlist_pos
         # incremented at the top of in store_file_metadata
@@ -457,8 +457,14 @@ class LoopHandler:
         # to tell the daemon that a new socket was added/removed
         # this is never *required*, but its nice as it means we pick up data ASAP
         # instead of waiting for the next scan_sockets call
+        # Note: SIGRTMIN is not available on macOS, so we need to check if it exists
 
-        signal.signal(signal.SIGRTMIN, self.signal_handler)
+        if hasattr(signal, "SIGRTMIN"):
+            signal.signal(signal.SIGRTMIN, self.signal_handler)
+        else:
+            logger.debug(
+                "SIGRTMIN not available on this platform (e.g., macOS), signal handler disabled"
+            )
 
     def signal_handler(self, signum: int, frame: Any) -> None:
         signal_name = signal.Signals(signum).name
